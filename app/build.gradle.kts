@@ -59,7 +59,10 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.02.02"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.wear:wear-tooling-preview:1.0.0")
+    val fuelVersion = "2.3.1"
+    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    implementation("com.github.kittinunf.fuel:fuel-android:$fuelVersion")
+    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
 
 @Composable
 fun Headline(modifier: Modifier = Modifier, text: String) {
@@ -12,9 +13,20 @@ fun Headline(modifier: Modifier = Modifier, text: String) {
 
 @Composable
 fun Text(modifier: Modifier = Modifier, text: String) {
-    BasicText(modifier = Modifier, text = text, style = Theme.typo.body)
+    BasicText(modifier = modifier, text = text, style = Theme.typo.body)
 }
+
 @Composable
-fun Text(modifier: Modifier = Modifier, text: String, color: Color) {
-    BasicText(modifier = Modifier, text = text, style = Theme.typo.body.copy(color = color))
+fun SmallText(modifier: Modifier = Modifier, text: String) {
+    BasicText(modifier = modifier, text = text, style = Theme.typo.small)
+}
+
+@Composable
+fun Text(
+    modifier: Modifier = Modifier,
+    text: String,
+    color: Color = Theme.typo.body.color,
+    fontSize: TextUnit = Theme.typo.body.fontSize
+) {
+    BasicText(modifier = modifier, text = text, style = Theme.typo.body.copy(color = color, fontSize = fontSize))
 }

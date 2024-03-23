@@ -11,8 +11,8 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 
 private typealias Content = @Composable ()->Unit
-class Navigator(initScreen: Content = {}) {
-    val screens = mutableStateListOf(initScreen)
+object Navigator {
+    val screens = mutableStateListOf<Content>()
     val currentScreen get() = screens.last()
 
     fun push(content: Content) {
@@ -21,25 +21,25 @@ class Navigator(initScreen: Content = {}) {
     fun pop() {
         screens.removeLast()
     }
+    fun replaceTop(content: Content) {
+        screens[screens.lastIndex] = content
+    }
 }
 
-val LocalNavigator = compositionLocalOf { Navigator() }
 private var stateHolder: SaveableStateHolder? = null
 @Composable
 fun NavHost(initScreen: Content, content: Content) {
     if(stateHolder == null) stateHolder = rememberSaveableStateHolder()
-    CompositionLocalProvider(LocalNavigator provides Navigator(initScreen)) {
-        content()
-    }
+    Navigator.push(initScreen)
+    content()
 }
 
 @Composable
 fun CurrentScreen() {
-    val navigator = LocalNavigator.current
-    navigator.screens.forEach {
+    Navigator.screens.forEach {
         stateHolder!!.SaveableStateProvider(key = it.hashCode()) {
             AnimatedVisibility(
-                visible = it == navigator.currentScreen,
+                visible = it == Navigator.currentScreen,
                 enter = slideInHorizontally(),
                 exit = slideOutHorizontally()
             ) {
