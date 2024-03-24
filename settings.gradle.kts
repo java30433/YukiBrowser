@@ -10,8 +10,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://www.jitpack.io")
     }
 }
 
 rootProject.name = "YukiBrowser"
 include(":app")
+include(":datastore-ktx")
+include(":navigator")

@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.tooling.preview.devices.WearDevices
 import bakuen.app.yukibrowser.R
-import bakuen.app.yukibrowser.ui.Navigator
 import bakuen.app.yukibrowser.ui.Text
 import bakuen.app.yukibrowser.ui.Theme
+import com.patchself.compose.navigator.Navigator
 
 @Preview(showBackground = true, device = WearDevices.LARGE_ROUND)
 @Composable

@@ -29,28 +29,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.tooling.preview.devices.WearDevices
 import bakuen.app.yukibrowser.core.browse.BrowseScreen
+import bakuen.app.yukibrowser.core.download.DownloadScreen
+import bakuen.app.yukibrowser.core.welcome.RoundButton
 import bakuen.app.yukibrowser.getX5CoreFile
 import bakuen.app.yukibrowser.ui.Headline
-import bakuen.app.yukibrowser.ui.Navigator
 import bakuen.app.yukibrowser.ui.Text
 import bakuen.app.yukibrowser.ui.Theme
 import bakuen.app.yukibrowser.utils.LaunchedEffectAsync
+import com.patchself.compose.navigator.Navigator
 import com.tencent.smtt.sdk.QbSdk
 
 @Preview(showBackground = true, device = WearDevices.LARGE_ROUND)
 @Composable
 fun MainScreen() {
-    val context = LocalContext.current
-    LaunchedEffectAsync {
-        if (!QbSdk.isX5Core()) {
-            QbSdk.reset(context)
-            QbSdk.installLocalTbsCore(
-                context,
-                0,
-                context.getX5CoreFile().path
-            )
-        }
-    }
     //TODO 内核未安装的提示
     Column(
         modifier = Modifier
@@ -62,6 +53,11 @@ fun MainScreen() {
         SearchBox(onSearch = {
             Navigator.push { BrowseScreen(defaultUrl = "https://ie.icoa.cn/") }
         })
+        RoundButton(onClick = {
+            Navigator.push { DownloadScreen() }
+        }) {
+            Text(text = "测试页面")
+        }
     }
 }
 

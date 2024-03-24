@@ -13,13 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.tooling.preview.devices.WearDevices
-import bakuen.app.yukibrowser.ui.Navigator
 import bakuen.app.yukibrowser.ui.SmallText
 import bakuen.app.yukibrowser.ui.Text
 import bakuen.app.yukibrowser.utils.LaunchedEffectAsync
 import bakuen.app.yukibrowser.utils.toJSONObject
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.coroutines.awaitString
+import com.patchself.compose.navigator.Navigator
 
 private data class FState(
     val fileName: String = "tbs_core_046514_armv7.apk",
