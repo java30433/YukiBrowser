@@ -2,7 +2,6 @@ package bakuen.app.yukibrowser.core.browse
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.ContextWrapper
 import com.tencent.smtt.export.external.interfaces.SslError
 import com.tencent.smtt.export.external.interfaces.SslErrorHandler
 import com.tencent.smtt.export.external.interfaces.WebResourceRequest

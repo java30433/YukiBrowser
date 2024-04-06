@@ -3,6 +3,7 @@ apply(from = "./secret.gradle.kts")
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
 }
 
 android {
@@ -59,12 +60,13 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.02.02"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.wear:wear-tooling-preview:1.0.0")
-    implementation(project(":datastore-ktx"))
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.5")
     implementation(project(":navigator"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.6.3")
     val fuelVersion = "2.3.1"
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.github.kittinunf.fuel:fuel-android:$fuelVersion")
     implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
 }

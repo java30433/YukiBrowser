@@ -10,5 +10,6 @@ fun BrowseScreen(defaultUrl: String) {
     val webViewState = rememberWebViewState(defaultUrl = defaultUrl)
     Box(modifier = Modifier.fillMaxSize()) {
         WebView(modifier = Modifier.fillMaxSize(), state = webViewState)
+        GestureNavigator()
     }
 }

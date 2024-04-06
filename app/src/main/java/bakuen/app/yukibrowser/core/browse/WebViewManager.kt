@@ -1,8 +1,6 @@
 package bakuen.app.yukibrowser.core.browse
 
 import android.content.Context
-import android.content.MutableContextWrapper
-import android.view.View
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

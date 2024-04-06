@@ -16,5 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "YukiBrowser"
 include(":app")
-include(":datastore-ktx")
 include(":navigator")

@@ -1,54 +1,65 @@
 package com.patchself.compose.navigator
 
-import androidx.compose.foundation.layout.Column
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.SaveableStateHolder
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 
-typealias Content = @Composable () -> Unit
-
+val LocalScreen = compositionLocalOf<ScreenNode> { error("") }
+internal lateinit var stateHolder: SaveableStateHolder
+internal lateinit var screenRoot: @Composable (currentScreen: @Composable () -> Unit) -> Unit
+internal val screens = mutableStateListOf<ScreenNode>()
 object Navigator {
-    private val stack = NavigationStack()
-    private var current: NavigationMode by mutableStateOf(NavigationMode.Rebase({}))
-    private var currentIndex = 0
 
-    internal var stateHolder: SaveableStateHolder? = null
+    private var event = EventChannel<NavigationEvent>()
 
-    @OptIn(ExperimentalComposeUiApi::class)
+    @SuppressLint("Range")
+    internal fun nodeBackward() {
+        screens.removeLastOrNull()
+    }
+
+    internal fun nodeForward(node: ScreenNode) {
+        screens.add(node)
+    }
+
+    fun navigateBack() {
+        event.emit(NavigationEvent.Backward)
+    }
+
+    fun forward(screen: @Composable () -> Unit) {
+        event.emit(NavigationEvent.Forward(ScreenNode(screen)))
+    }
+
     @Composable
-    fun ViewContent() {
+    fun ScreenContent(
+        initScreen: @Composable () -> Unit,
+        screenWrapper: @Composable (currentScreen: @Composable () -> Unit) -> Unit
+    ) {
         stateHolder = rememberSaveableStateHolder()
-        Column {
-            NavigationWrapper(current = current, stack = stack)
+        screenRoot = screenWrapper
+        var isInit by rememberSaveable { mutableStateOf(true) }
+        if (isInit) {
+            screens.clear()
+            screens.add(ScreenNode(initScreen))
+            isInit = false
         }
-
-    }
-
-    fun navigateBack(): Boolean {
-        stack.getPrevious()?.let {
-            current = NavigationMode.Backward(it)
-            return true
+        ReduceRecompose {
+            if (screens.isNotEmpty()) {
+                NavigationWrapper(
+                    event = event.consumeAsState().value
+                )
+            }
         }
-        return false
     }
 
-    fun push(content: Content) {
-        stack.push(content, true)
-        current = NavigationMode.Forward(content)
-    }
-
-    fun replaceTop(content: Content) {
-        stack.removeLast()
-        push(content)
-    }
-
-    fun initController(content: Content) {
-        stack.clear()
-        stack.push(content, true)
-        current = NavigationMode.Rebase(current = content)
+    @Composable
+    private fun ReduceRecompose(content: @Composable () -> Unit) {
+        content()
     }
 }
