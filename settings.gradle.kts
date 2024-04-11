@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "YukiBrowser"
 include(":app")
 include(":navigator")
+include(":http")

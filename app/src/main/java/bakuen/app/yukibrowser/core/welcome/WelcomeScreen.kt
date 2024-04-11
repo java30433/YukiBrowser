@@ -28,8 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import bakuen.app.yukibrowser.R
 import bakuen.app.yukibrowser.core.main.MainScreen
+import bakuen.app.yukibrowser.managers.X5CoreMan
+import bakuen.app.yukibrowser.prefs.AppData
 import bakuen.app.yukibrowser.prefs.Settings
 import bakuen.app.yukibrowser.prefs.rememberStore
+import bakuen.app.yukibrowser.prefs.setStore
+import bakuen.app.yukibrowser.ui.DialogMan
 import bakuen.app.yukibrowser.ui.Icon
 import bakuen.app.yukibrowser.ui.LocalColors
 import bakuen.app.yukibrowser.ui.RoundPreview
@@ -44,7 +48,7 @@ import com.patchself.compose.navigator.Navigator
 @RoundPreview
 @Composable
 fun WelcomeScreen() {
-    var settings by rememberStore(serializer = Settings.serializer(), preview = Settings())
+    var settings by rememberStore(preview = Settings())
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,7 +88,7 @@ fun WelcomeScreen() {
         Text(text = "选择浏览器内核")
         Space(12.dp)
         val hasWebview = try {
-            WebView::class.java != null
+            true //TODO: Check
         } catch (e: Exception) {
             false
         }
@@ -98,7 +102,22 @@ fun WelcomeScreen() {
         Space(4.dp)
         LargeShadowCheckbox(
             checked = settings.webCore == Settings.X5_CORE,
-            onClick = { settings = settings.copy(webCore = Settings.X5_CORE) },
+            onClick = {
+                DialogMan.showDialog {
+                    DialogMan.YesOrNot(
+                        title = "提醒",
+                        body = "需要下载内核（约50MB），是否立即开始下载？",
+                        yes = "下载",
+                        no = "暂时不要",
+                        onClick = {
+                            if (it) {
+                                X5CoreMan.tryDownload()
+                            }
+                        }
+                    )
+                }
+                settings = settings.copy(webCore = Settings.X5_CORE)
+            },
             icon = painterResource(id = R.drawable.ic_logo_x5),
             title = "腾讯 X5 内核"
         )
@@ -109,7 +128,8 @@ fun WelcomeScreen() {
         )
         Space(36.dp)
         RoundButton(onClick = {
-            Navigator.forward { MainScreen() }
+            setStore<AppData> { copy(firstLaunch = false) }
+            Navigator.replaceTop { MainScreen() }
         }) {
             Icon(size = 24.dp, painter = painterResource(id = R.drawable.ic_arrow_forward))
         }

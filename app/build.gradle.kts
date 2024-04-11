@@ -62,11 +62,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.5")
     implementation(project(":navigator"))
+    implementation(project(":http"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.6.3")
-    val fuelVersion = "2.3.1"
-    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.github.kittinunf.fuel:fuel-android:$fuelVersion")
-    implementation("com.github.kittinunf.fuel:fuel-coroutines:$fuelVersion")
     debugImplementation("androidx.compose.ui:ui-tooling")
-
 }

@@ -36,6 +36,12 @@ object Navigator {
         event.emit(NavigationEvent.Forward(ScreenNode(screen)))
     }
 
+    fun replaceTop(screen: @Composable () -> Unit) {
+        val e = screens.lastOrNull()
+        event.emit(NavigationEvent.Forward(ScreenNode(screen)))
+        screens.remove(e)
+    }
+
     @Composable
     fun ScreenContent(
         initScreen: @Composable () -> Unit,

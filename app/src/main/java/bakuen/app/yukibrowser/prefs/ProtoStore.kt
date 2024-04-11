@@ -1,3 +1,6 @@
+@file:Suppress("UNCHECKED_CAST")
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package bakuen.app.yukibrowser.prefs
 
 import android.content.Context
@@ -6,36 +9,49 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import kotlinx.coroutines.launch
+import bakuen.app.yukibrowser.appContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.protobuf.ProtoBuf
 import java.io.File
 
-@OptIn(ExperimentalSerializationApi::class)
-private val protobuf = ProtoBuf { }
-
-private val storeCache = mutableMapOf<String, ProtoStore>()
-
+val protobuf = ProtoBuf { }
+class SerializerCache<T: ProtoStore>(val serializer: KSerializer<T>, val name: String, var store: T? = null)
+val serializerCache = mutableMapOf<Class<*>, SerializerCache<*>>()
 interface ProtoStore
-@Suppress("UNCHECKED_CAST")
-@OptIn(ExperimentalSerializationApi::class)
-@Composable
-fun <T : ProtoStore> rememberStore(serializer: KSerializer<T>, preview: T? = null): MutableState<T> {
-    if (preview != null && LocalInspectionMode.current) return remember { mutableStateOf(preview) }
-    val name = serializer.descriptor.serialName
-    val context = LocalContext.current
-    if (!storeCache.containsKey(name)) {
-        storeCache[name] = protobuf.decodeFromByteArray(serializer, context.getFile(name).readBytes())
+
+inline fun <reified T: ProtoStore> getSerializer(): SerializerCache<T> {
+    return serializerCache.getOrPut(T::class.java) {
+        val companion = T::class.java.getDeclaredField("Companion").get(null)
+        val serializer = companion.javaClass.getDeclaredMethod("serializer").invoke(companion) as KSerializer<T>
+        SerializerCache(serializer, serializer.descriptor.serialName)
+    } as SerializerCache<T>
+}
+inline fun <reified T: ProtoStore> getStore(): T {
+    val cache = getSerializer<T>()
+    if (cache.store == null) {
+        cache.store = protobuf.decodeFromByteArray(cache.serializer, appContext.getFile(cache.name).readBytes()) as T
     }
-    val state = remember { mutableStateOf(storeCache[name] as T) }
-    LaunchedEffect(state.value == storeCache[name]) {
-        storeCache[name] = state.value
-        launch {
-            context.getFile(name).writeBytes(protobuf.encodeToByteArray(serializer, state.value))
-        }
+    return cache.store as T
+}
+
+inline fun <reified T: ProtoStore> writeStore(value: T) {
+    val cache = getSerializer<T>()
+    cache.store = value
+    appContext.getFile(cache.name).writeBytes(protobuf.encodeToByteArray(cache.serializer, value))
+}
+inline fun <reified T: ProtoStore> setStore(block: T.()->T) {
+    writeStore(getStore<T>().block())
+}
+
+@Composable
+inline fun <reified T: ProtoStore> rememberStore(preview: T? = null): MutableState<T> {
+    if (preview != null && LocalInspectionMode.current) return remember { mutableStateOf(preview) }
+    val cache = getSerializer<T>()
+    val state = remember { mutableStateOf(getStore<T>()) }
+    LaunchedEffect(state.value == cache.store) {
+        writeStore(state.value)
     }
     return state
 }
