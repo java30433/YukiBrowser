@@ -178,6 +178,7 @@ inline fun LargeShadowCheckbox(
         Box(
             modifier = Modifier
                 .padding(horizontal = 12.dp)
+                .clickable(enabled = !disabled, onClick = onClick)
                 .fillMaxWidth()
                 .height(86.dp)
                 .border(
@@ -191,7 +192,6 @@ inline fun LargeShadowCheckbox(
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 10.dp)
-                .clickable(enabled = !disabled, onClick = onClick)
         ) {
             Icon(painter = icon)
             Box(modifier = Modifier.align(Alignment.BottomStart)) {

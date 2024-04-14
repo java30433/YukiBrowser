@@ -57,6 +57,7 @@ android {
 
 dependencies {
     implementation(fileTree("libs"))
+    //implementation("io.github.jonanorman.android.webviewup:core:0.1.0")
     implementation(platform("androidx.compose:compose-bom:2024.02.02"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.activity:activity-compose:1.8.2")

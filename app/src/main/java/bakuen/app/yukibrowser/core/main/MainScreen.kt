@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -26,18 +27,20 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import bakuen.app.yukibrowser.core.browse.BrowseScreen
+import bakuen.app.yukibrowser.managers.UpdateCheckMan
 import bakuen.app.yukibrowser.managers.X5CoreMan
 import bakuen.app.yukibrowser.prefs.Settings
 import bakuen.app.yukibrowser.prefs.getStore
 import bakuen.app.yukibrowser.ui.Headline
 import bakuen.app.yukibrowser.ui.LocalColors
 import bakuen.app.yukibrowser.ui.RoundPreview
+import bakuen.app.yukibrowser.ui.SmallText
 import bakuen.app.yukibrowser.ui.Text
 import bakuen.app.yukibrowser.ui.Theme
 import bakuen.lib.http.DownloadState
 import bakuen.lib.http.toReadable
 import com.patchself.compose.navigator.Navigator
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.delay
 
 @RoundPreview
 @Composable
@@ -48,7 +51,11 @@ fun MainScreen() {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (getStore<Settings>().webCore == Settings.X5_CORE && !X5CoreMan.canUse) X5DownloadCard()
+        if ((UpdateCheckMan.response?.versionCode ?: 0) > UpdateCheckMan.currentVersionCode) SmallText(text = "发现新版本：${UpdateCheckMan.response?.versionCode}\n当前版本：${UpdateCheckMan.currentVersionCode}")
+        if (getStore<Settings>().webCore == Settings.X5_CORE && !X5CoreMan.canUse) {
+            if (X5CoreMan.hasCore) SmallText(modifier = Modifier.clickable { X5CoreMan.install() }, text = "X5内核未安装，点此安装")
+            else X5DownloadCard()
+        }
         Headline(modifier = Modifier.padding(top = 4.dp, bottom = 6.dp), text = "Yuki 浏览器")
         SearchBox(onSearch = {
             Navigator.forward { BrowseScreen(defaultUrl = "https://ie.icoa.cn/") }
@@ -60,21 +67,29 @@ fun MainScreen() {
 fun X5DownloadCard() {
     val task = X5CoreMan.task
     if (task == null) {
-        Text(
+        SmallText(
             modifier = Modifier.clickable { X5CoreMan.tryDownload() },
             text = "X5内核未下载，点此继续"
         )
     } else {
-        val ds by task.downloadState.collectAsState()
-        when (ds) {
-            DownloadState.Downloading -> Text(text = "X5内核下载中 ${task.readBytes.toReadable()}/${task.totalBytes.toReadable()}")
-            is DownloadState.Error -> Text(
-                modifier = Modifier.clickable { X5CoreMan.tryDownload() },
-                text = "X5内核下载出错！点击重试"
-            )
-            DownloadState.Finished -> Text(text = "下载完成")
-            else -> Text(text = "准备下载中...")
+        val ds = produceState(initialValue = "") {
+            while (true) {
+                when (task.downloadState) {
+                    DownloadState.Downloading -> value = "X5内核下载中 ${task.readBytes.toReadable()}/${task.totalBytes.toReadable()}"
+                    DownloadState.Finished -> {
+                        value = "下载完成"
+                        break
+                    }
+                    is DownloadState.Error -> {
+                        value = "下载失败！点击重试"
+                        break
+                    }
+                    else -> {}
+                }
+                delay(200)
+            }
         }
+        SmallText(modifier = Modifier.clickable { X5CoreMan.tryDownload() }, text = ds.value)
     }
 }
 

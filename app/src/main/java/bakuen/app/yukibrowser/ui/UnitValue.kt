@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import kotlin.math.roundToInt
 
+
+val Dp.toPx @Composable get() = toPx(LocalDensity.current)
+
 fun Dp.toPx(density: Density) = with(density) { this@toPx.toPx() }
 fun Int.pxToDp(density: Density) = with(density) { this@pxToDp.toDp() }
 fun Int.systemDp(density: Density) = TypedValue.applyDimension(

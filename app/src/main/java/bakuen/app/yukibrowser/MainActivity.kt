@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             BaseTheme {
                 BackHandler {
-                    Navigator.navigateBack()
+                    if (!Navigator.navigateBack()) finish()
                 }
                 Navigator.ScreenContent(
                     initScreen = { if (getStore<AppData>().firstLaunch) WelcomeScreen() else MainScreen() },

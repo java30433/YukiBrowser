@@ -18,3 +18,11 @@ fun Icon(size: Dp = 16.dp, painter: Painter, color: Color = LocalColors.current.
         contentDescription = null,
         colorFilter = ColorFilter.tint(color = color)
     )
+@Composable
+fun Icon(modifier: Modifier, painter: Painter, color: Color = LocalColors.current.text) =
+    Image(
+        modifier = modifier,
+        painter = painter,
+        contentDescription = null,
+        colorFilter = ColorFilter.tint(color = color)
+    )

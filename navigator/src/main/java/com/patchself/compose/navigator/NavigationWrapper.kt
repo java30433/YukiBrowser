@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FloatExponentialDecaySpec
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +41,13 @@ internal fun NavigationWrapper(event: NavigationEvent?) {
                         swipeOffset.animateTo(0f)
                     }
 
+                    is NavigationEvent.Replace -> {
+                        Navigator.nodeForward(event.target)
+                        swipeOffset.snapTo(maxOffset)
+                        swipeOffset.animateTo(0f)
+                        screens.removeAt(screens.lastIndex - 1)
+                    }
+
                     else -> {}
                 }
             }
@@ -48,15 +56,12 @@ internal fun NavigationWrapper(event: NavigationEvent?) {
             modifier = Modifier
                 .fillMaxSize()
                 .run {
-                    if (screens.last().enableSwipeBack) {
+                    if (screens.last().enableSwipeBack && screens.size > 1) {
                         draggable(
                             orientation = Orientation.Horizontal,
-                            state = remember {
-                                DraggableState {
-                                    //这里如果使用rememberCoroutineScope，会造成手感问题
-                                    runBlocking {
-                                        swipeOffset.snapTo((swipeOffset.value + it).coerceAtLeast(0f))
-                                    }
+                            state = rememberDraggableState {
+                                runBlocking {
+                                    swipeOffset.snapTo((swipeOffset.value + it).coerceAtLeast(0f))
                                 }
                             },
                             onDragStopped = { velocity ->

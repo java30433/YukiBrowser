@@ -1,7 +1,7 @@
 package bakuen.lib.http
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Request
 import java.io.File
@@ -13,9 +13,9 @@ sealed class DownloadState {
     data object Downloading : DownloadState()
     data object Finished : DownloadState()
 
-    abstract class Error: DownloadState()
+    abstract class Error : DownloadState()
     class ServerError(val code: Int, val message: String) : Error()
-    class ClientError(val exception: Exception): Error()
+    class ClientError(val exception: Exception) : Error()
 }
 
 class DownloadFileInfo(
@@ -59,55 +59,64 @@ class DownloadTask(
     val saveFile: File,
     val totalBytes: Long
 ) {
-    private val _downloadState = MutableStateFlow<DownloadState>(DownloadState.Paused)
-    val downloadState: StateFlow<DownloadState> get() = _downloadState
+    val saveFileTmp = File("${saveFile.path}.tmp").also { if (!it.exists()) it.createNewFile() }
+    var downloadState: DownloadState = DownloadState.Paused
+        private set
     private var call: Call? = null
     var readBytes = saveFile.length()
         private set
-    suspend fun pause() {
+    private fun updateState(state: DownloadState) {
+        downloadState = state
+    }
+
+    fun pause() {
         call?.cancel()
         call = null
-        _downloadState.emit(DownloadState.Paused)
+        updateState(DownloadState.Paused)
     }
 
     suspend fun start() {
-        if (call != null) return
-        call = client.okClient.newCall(Request.Builder().url(url).run {
-            if (totalBytes > 0) addHeader("Range", "bytes=$readBytes-$totalBytes")
-            else this
-        }.build())
+        withContext(Dispatchers.IO) {
+            if (call != null) return@withContext
+            call = client.okClient.newCall(Request.Builder().url(url).run {
+                if (totalBytes > 0) addHeader("Range", "bytes=$readBytes-$totalBytes")
+                else this
+            }.build())
 
-        try {
-            val response = call!!.execute()
-            if (!response.isSuccessful) {
-                _downloadState.emit(DownloadState.ServerError(response.code, response.message))
-                return
-            }
-            val body = response.body
-            val accFile = RandomAccessFile(saveFile, "rw")
-            accFile.seek(readBytes)
-
-            body?.byteStream()?.use { inputStream ->
-                val buffer = ByteArray(8192)
-                var len: Int
-                while (-1 != inputStream.read(buffer).also { len = it }) {
-                    accFile.write(buffer, 0, len)
-                    readBytes += len
-                    _downloadState.emit(DownloadState.Downloading)
+            try {
+                val response = call!!.execute()
+                if (!response.isSuccessful) {
+                    updateState(DownloadState.ServerError(response.code, response.message))
+                    return@withContext
                 }
-            }
+                val body = response.body
+                val accFile = RandomAccessFile(saveFileTmp, "rw")
+                accFile.seek(readBytes)
 
-            _downloadState.emit(DownloadState.Finished)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            _downloadState.emit(DownloadState.ClientError(e))
+                updateState(DownloadState.Downloading)
+                body?.byteStream()?.use { inputStream ->
+                    val buffer = ByteArray(65536)
+                    var len: Int
+                    while (-1 != inputStream.read(buffer).also { len = it }) {
+                        accFile.write(buffer, 0, len)
+                        readBytes += len
+                    }
+                }
+                response.body?.close()
+                accFile.close()
+                saveFileTmp.renameTo(saveFile)
+                updateState(DownloadState.Finished)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                updateState(DownloadState.ClientError(e))
+            }
         }
     }
 }
 
-private val gb = 1 shl 30
-private val mb = 1 shl 20
-private val kb = 1 shl 10
+val gb = 1 shl 30
+val mb = 1 shl 20
+val kb = 1 shl 10
 fun Long.toReadable() = when {
     this >= gb -> "%.1f GB".format(toDouble() / gb)
     this >= mb -> "%.1f MB".format(toDouble() / mb)

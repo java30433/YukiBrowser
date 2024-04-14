@@ -1,18 +1,33 @@
 package bakuen.app.yukibrowser.managers
 
-import android.util.Log
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import bakuen.app.yukibrowser.appContext
 import bakuen.app.yukibrowser.http
 import bakuen.lib.http.get
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+
+@OptIn(DelicateCoroutinesApi::class)
 object UpdateCheckMan {
-    private const val url = "https://mirror.ghproxy.com/https://raw.githubusercontent.com/java30433/YukiBrowser-web/main/dist/version.json"
-    private var cache: UpdateCheckResponse? = null
-    suspend fun get(): UpdateCheckResponse? {
-        if (cache == null) {
-            cache = http.get(url).successOrNull()?.readJson(UpdateCheckResponse.serializer())
+    private const val url = "https://pastebin.com/raw/F61jWGTX"
+    var response by mutableStateOf<UpdateCheckResponse?>(null)
+        private set
+
+    init {
+        GlobalScope.launch {
+            response = http.get(url).successOrNull()?.readJson(UpdateCheckResponse.serializer())
         }
-        return cache
+    }
+
+    val currentVersionCode: Int get() {
+        return appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionCode
     }
 }
 
@@ -22,5 +37,6 @@ data class UpdateCheckResponse(
     val versionCode: Int,
     val x5code: Int,
     val x5description: String,
-    val x5url: String
+    val x5a7: String,
+    val x5a8: String,
 )

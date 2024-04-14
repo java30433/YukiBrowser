@@ -10,8 +10,9 @@ import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 
-val LocalScreen = compositionLocalOf<ScreenNode> { error("") }
+val LocalScreen = staticCompositionLocalOf<ScreenNode> { error("") }
 internal lateinit var stateHolder: SaveableStateHolder
 internal lateinit var screenRoot: @Composable (currentScreen: @Composable () -> Unit) -> Unit
 internal val screens = mutableStateListOf<ScreenNode>()
@@ -28,8 +29,11 @@ object Navigator {
         screens.add(node)
     }
 
-    fun navigateBack() {
-        event.emit(NavigationEvent.Backward)
+    fun navigateBack(): Boolean {
+        if (screens.size >= 2) {
+            event.emit(NavigationEvent.Backward)
+            return true
+        } else return false
     }
 
     fun forward(screen: @Composable () -> Unit) {
@@ -37,9 +41,7 @@ object Navigator {
     }
 
     fun replaceTop(screen: @Composable () -> Unit) {
-        val e = screens.lastOrNull()
-        event.emit(NavigationEvent.Forward(ScreenNode(screen)))
-        screens.remove(e)
+        event.emit(NavigationEvent.Replace(ScreenNode(screen)))
     }
 
     @Composable
